@@ -3,6 +3,8 @@
 Investment buddy called Matti. It helps you to invest money
 early on similar to other Robo advisors.
 
+![Matti](https://github.com/zaynetro/invest-matti/blob/master/www/matti-dark-text.png)
+
 ## Team
 
 Junction 2017 project of
