@@ -56,7 +56,10 @@ body <- dashboardBody(
     ),
     
     tabItem(tabName = "plan",
-        h2("Plan")
+        h2("Plan"),
+        fluidRow(column(width = 12,
+                        plotOutput("plan_line_graph", height = 350)       
+        ))
     )
   )
 )
@@ -68,7 +71,8 @@ ui <- dashboardPage(
 )
 
 get_investment <- function(principle, years, vector_length= 365, interest_rate = 0.04, method='test') {
-  return(seq(principle, (principle*(1+(interest_rate/vector_length))^(years*vector_length)), length.out = years*vector_length))
+  return(seq(principle, (principle*(1+(interest_rate/vector_length))^(years*vector_length)), 
+             length.out = years*vector_length))
 }
 
 get_investment2 <- function(principle, years, monthly, vector_length= 365, interest_rate = 0.03, method='test') {
@@ -79,7 +83,9 @@ get_investment2 <- function(principle, years, monthly, vector_length= 365, inter
     fund <- inves[length(inves)] + monthly
   }
   remaining_length <- years*vector_length %% 30
-  inves <- c(inves, seq(fund, (fund*(1+(interest_rate/remaining_length))^(1/12*remaining_length)), length.out = remaining_length))
+  inves <- c(inves, seq(fund, 
+                        (fund*(1+(interest_rate/remaining_length))^(1/12*remaining_length)), 
+                        length.out = remaining_length))
   print("investment summary")
   print(summary(inves))
   print(length(inves))
@@ -126,8 +132,7 @@ server <- function(input, output) {
   in_year <- 12 * monthly
   actual <- c(actual, seq(actual[vector_length], (actual[vector_length]+years*in_year), 
                           length.out=(years*vector_length)))
-  print("actual length")
-  print(length(actual))
+
   investment <- get_investment2(principle = actual[vector_length],
                                years = years,
                                monthly = monthly,
@@ -142,24 +147,67 @@ server <- function(input, output) {
                          type=c(rep("Current", times=((years+1)*vector_length)), 
                                 rep("Investment", times=(years*vector_length)),
                                 rep("Peers", times=(years*vector_length))))
-  print(finances2)
+  ####################
+  vector_length <- 365
+  years <- 1
+  actual <- 10000
+  investment <- get_investment(principle = actual,
+                               years = years,
+                               vector_length = vector_length)
+  temp <- investment
+  for(i in 1:length(investment)) {
+    investment[i] <- investment + sample(c(0, (rnorm(1) * 50)),
+                                         1,
+                                         runif(1,0.7,0.9))
+  }
   
-  # plotting
+  monthly <- 300
+  in_year <- 12 * monthly
+  goal <- get_investment2(principle = actual,
+                                years = years,
+                                monthly = monthly,
+                                vector_length = vector_length)
+ 
+  timestamps <- seq( as.Date("2016-07-01"), by=1, len=(years*vector_length))
+  peers <- temp * 0.8
+  plan_data <- data.table(date = rep(timestamps, 3), 
+                         balance=c(investment, goal, peers),
+                         type=c(rep("Current", times=((years)*vector_length)), 
+                                rep("Investment", times=(years*vector_length)),
+                                rep("Peers", times=(years*vector_length))))
+  ### plotting
+  # Suggestion Plot: Alternative 1
   output$alt1_line_graph <- renderPlot({
     print(
-      ggplot(data = finances[finances$type %in% input$Indicators], aes(x=date, y=balance, color=type, linetype=type)) + 
+      ggplot(data = finances[finances$type %in% input$Indicators], 
+             aes(x=date, y=balance, color=type, linetype=type)) + 
         geom_line() +
         labs(x="Date", y="Total")
     )
   })
   
+  # Suggestion Plot: Alternative 2
   output$alt2_line_graph <- renderPlot({
     print(
-      ggplot(data = finances2[finances2$type %in% input$Indicators], aes(x=date, y=balance, color=type, linetype=type)) + 
+      ggplot(data = finances2[finances2$type %in% input$Indicators], 
+             aes(x=date, y=balance, color=type, linetype=type)) + 
         geom_line() +
         labs(x="Date", y="Total")
     )
   })
+  
+  # Plan Plot
+  output$plan_line_graph <- renderPlot({
+    print(
+      ggplot(data = plan_data,
+             aes(x=date, y=balance, color=type, linetype=type)) + 
+        geom_line() +
+        labs(x="Date", y="Total")
+    )
+  })
+  
 }
+
+
 
 shinyApp(ui, server)
