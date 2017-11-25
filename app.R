@@ -33,8 +33,13 @@ body <- dashboardBody(
   tabItems(
     tabItem(tabName = "suggestions",
         h2("Suggestions"),
+        h3("Alternative 1"),
         fluidRow(
-          plotOutput("balance_line_graph", height = 350)
+          plotOutput("alt1_line_graph", height = 350)
+        ),
+        h3("Alternative 2"),
+        fluidRow(
+          plotOutput("alt2_line_graph", height = 350)
         )
     ),
     
@@ -52,6 +57,21 @@ ui <- dashboardPage(
 
 get_investment <- function(principle, years, vector_length= 365, interest_rate = 0.04, method='test') {
   return(seq(principle, (principle*(1+(interest_rate/vector_length))^(years*vector_length)), length.out = years*vector_length))
+}
+
+get_investment2 <- function(principle, years, monthly, vector_length= 365, interest_rate = 0.03, method='test') {
+  fund <- principle
+  inves <- numeric()
+  for(i in 1:(years*vector_length%/%30)) {
+    inves <- c(inves, seq(fund, (fund*(1+(interest_rate/30))^(1/12*30)), length.out = 30))
+    fund <- inves[length(inves)] + monthly
+  }
+  remaining_length <- years*vector_length %% 30
+  inves <- c(inves, seq(fund, (fund*(1+(interest_rate/remaining_length))^(1/12*remaining_length)), length.out = remaining_length))
+  print("investment summary")
+  print(summary(inves))
+  print(length(inves))
+  return(inves)
 }
 
 server <- function(input, output) {
@@ -76,12 +96,46 @@ server <- function(input, output) {
                          balance=c(actual, investment),
                          type=c(rep("Current", times=((years+1)*vector_length)), 
                                 rep("Investment", times=(years*vector_length))))
-  print(finances)
-  output$balance_line_graph <- renderPlot({
+  ########################
+  
+  actual <- c(4000)
+  for(i in 2:vector_length) {
+    actual <- c(actual, (actual[length(actual)] +
+                           sample(c(0, rnorm(1, 0, 1)[1] * 50),
+                                  1,
+                                  runif(1,0.7,0.9)))
+    )
+  }
+  monthly <- 300
+  in_year <- 12 * monthly
+  actual <- c(actual, seq(actual[vector_length], (actual[vector_length]+years*in_year), 
+                          length.out=(years*vector_length)))
+  print("actual length")
+  print(length(actual))
+  investment <- get_investment2(principle = actual[vector_length],
+                               years = years,
+                               monthly = monthly,
+                               vector_length = vector_length)
+  print("investment length")
+  print(length(investment))
+  
+  finances2 <- data.table(date = rep(x = c(timestamps, timestamps[(vector_length+1):length(timestamps)])), 
+                         balance=c(actual, investment),
+                         type=c(rep("Current", times=((years+1)*vector_length)), 
+                                rep("Investment", times=(years*vector_length))))
+  print(finances2)
+  output$alt1_line_graph <- renderPlot({
     print(
       ggplot(data = finances, aes(x=date, y=balance, color=type, linetype=type)) + 
         geom_line() +
-        geom_smooth(method = "glm") +
+        labs(x="Date", y="Total")
+    )
+  })
+  
+  output$alt2_line_graph <- renderPlot({
+    print(
+      ggplot(data = finances2, aes(x=date, y=balance, color=type, linetype=type)) + 
+        geom_line() +
         labs(x="Date", y="Total")
     )
   })
