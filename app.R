@@ -43,11 +43,13 @@ body <- dashboardBody(
                                "Investment"),
                              inline=TRUE)
         )),
-        h3("Alternative 1"),
+        h3("Suggestion 1"),
+        tags$p("You haven't used 10k on your account. Matti suggests you to invest them."),
         fluidRow(column(width = 12,
           plotOutput("alt1_line_graph", height = 350)
         )),
-        h3("Alternative 2"),
+        h3("Suggestion 2"),
+        tags$p("You spend 500EUR a month on controversial entertainment: gambling, pubs and Alko. Matti suggests you to halve it and invest another one."),
         fluidRow(column(width = 12,
           plotOutput("alt2_line_graph", height = 350)
         ))
