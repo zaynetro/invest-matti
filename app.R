@@ -144,11 +144,13 @@ server <- function(input, output) {
                                 rep("Investment", times=(years*vector_length)),
                                 rep("Peers", times=(years*vector_length))))
   ####################
-  number_of_days = 100
-  investment <- temp_investment_1[1:number_of_days]
-  peers <- temp_investment_1[1:number_of_days] + seq(0, -1000, length.out = number_of_days)
+  number_of_days = 300
+  actual <- 6600
+  timestamps <- seq( as.Date("2016-02-01"), by=1, len=((years+1)*vector_length))
+  investment <- rep(actual, number_of_days) + 50*1.01^(1:number_of_days)
+  peers <- rep(actual, number_of_days) + 50*1.005^(1:number_of_days)
 
-  goal <- temp_investment_2[1:number_of_days]
+  goal <- rep(actual, number_of_days) + 50*1.011^(1:number_of_days)
   plan_data <- data.table(date = rep(timestamps[1:number_of_days], 3),
                          balance=c(investment, goal, peers),
                          type=c(rep("Current", times=number_of_days), 
