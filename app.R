@@ -3,11 +3,17 @@ library(shinydashboard)
 library(shiny)
 library(ggplot2)
 library(data.table)
+library(rjson)
+
+balance_uri <- "https://invest-matti-api.herokuapp.com/balance"
+balance_json <- fromJSON(file=balance_uri)
+print(balance_json)
+print(balance_json$balance)
 
 header <- dashboardHeader(title = "Invest Matti dashboard",
                           dropdownMenu(type = "notifications",
                                        notificationItem(
-                                         text = "Make an investement already today",
+                                         text = "Make an investment already today",
                                          icon = icon("exclamation-triangle"),
                                          status = "warning"
                                        )
@@ -21,7 +27,14 @@ header <- dashboardHeader(title = "Invest Matti dashboard",
 sidebar <- dashboardSidebar(sidebarMenu(
   menuItem("Suggestions", tabName = "suggestions", icon = icon("dashboard"),
            badgeLabel = "new", badgeColor = "green"),
-  menuItem("Plan", icon = icon("calendar"), tabName = "plan"),
+  menuItem("Plan", icon = icon("calendar"), tabName = "plan",
+           badgeLabel = balance_json$balance, badgeColor = "blue"),
+  menuItem("Auth (debug)", icon = icon("sign-in"), 
+           href = "http://invest-matti-api.herokuapp.com/auth"),
+  menuItem("Source code", icon = icon("file-code-o"), 
+           href = "https://github.com/zaynetro/invest-matti"),
+  menuItem("Source code (API)", icon = icon("code-fork"), 
+           href = "https://github.com/zaynetro/invest-matti-api"),
   absolutePanel(bottom = 0, height = "180px", right = 0, left = 0,
                 tags$div(class = "matti-logo"))
 ))
