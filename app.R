@@ -4,23 +4,50 @@ library(shiny)
 library(ggplot2)
 library(data.table)
 
-ui <- dashboardPage(
-  dashboardHeader(title = "Basic dashboard"),
-  
-  dashboardSidebar(),
-  dashboardBody(
-    # Boxes need to be put in a row (or column)
-    fluidRow(
-      # box(
-        plotOutput("balance_line_graph", height = 350)
-        # )
-      # ,
-      # box(
-      #   title = "Controls",
-      #   sliderInput("slider", "Number of observations:", 1, 100, 50)
-      # )
+header <- dashboardHeader(title = "Invest Matti dashboard",
+                          dropdownMenu(type = "notifications",
+                                       notificationItem(
+                                         text = "Make an investement already today",
+                                         icon = icon("exclamation-triangle"),
+                                         status = "warning"
+                                       )
+                          ),
+                          dropdownMenu(type = "tasks", badgeStatus = "success",
+                                       taskItem(value = 90, color = "green",
+                                                "Plan progress this month"
+                                       )
+                          ))
+
+sidebar <- dashboardSidebar(sidebarMenu(
+  menuItem("Suggestions", tabName = "suggestions", icon = icon("dashboard"),
+           badgeLabel = "new", badgeColor = "green"),
+  menuItem("Plan", icon = icon("calendar"), tabName = "plan"),
+  absolutePanel(bottom = 0, height = "180px", right = 0, left = 0,
+                tags$div(class = "matti-logo"))
+))
+
+body <- dashboardBody(
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+  ),
+  tabItems(
+    tabItem(tabName = "suggestions",
+        h2("Suggestions"),
+        fluidRow(
+          plotOutput("balance_line_graph", height = 350)
+        )
+    ),
+    
+    tabItem(tabName = "plan",
+        h2("Plan")
     )
   )
+)
+  
+ui <- dashboardPage(
+  header,
+  sidebar,
+  body
 )
 
 server <- function(input, output) {
