@@ -86,9 +86,6 @@ get_investment2 <- function(principle, years, monthly, vector_length= 365, inter
   inves <- c(inves, seq(fund, 
                         (fund*(1+(interest_rate/remaining_length))^(1/12*remaining_length)), 
                         length.out = remaining_length))
-  print("investment summary")
-  print(summary(inves))
-  print(length(inves))
   return(inves)
 }
 
@@ -108,19 +105,19 @@ server <- function(input, output) {
   investment <- get_investment(principle = actual[vector_length],
                                years = years,
                                vector_length = vector_length)
-  print(length(investment))
+  temp_investment_1 <- investment
   timestamps <- seq( as.Date("2016-07-01"), by=1, len=((years+1)*vector_length))
   peers <- actual[(vector_length+1):length(actual)] + seq(0, 1000, length.out = years*vector_length)
-  finances <- data.table(date = rep(x = c(timestamps, 
+  finances <- data.table(date = c(timestamps, 
                                           timestamps[(vector_length+1):length(timestamps)],
-                                          timestamps[(vector_length+1):length(timestamps)])), 
+                                          timestamps[(vector_length+1):length(timestamps)]), 
                          balance=c(actual, investment, peers),
                          type=c(rep("Current", times=((years+1)*vector_length)), 
                                 rep("Investment", times=(years*vector_length)),
                                 rep("Peers", times=(years*vector_length))))
   ########################
   
-  actual <- c(4000)
+  actual <- c(6000)
   for(i in 2:vector_length) {
     actual <- c(actual, (actual[length(actual)] +
                            sample(c(0, rnorm(1, 0, 1)[1] * 50),
@@ -137,44 +134,26 @@ server <- function(input, output) {
                                years = years,
                                monthly = monthly,
                                vector_length = vector_length)
-  print("investment length")
-  print(length(investment))
+  temp_investment_2 <- investment
   peers <- actual[(vector_length+1):length(actual)] + seq(0, -20000, length.out = years*vector_length)
-  finances2 <- data.table(date = rep(x = c(timestamps, 
+  finances2 <- data.table(date = c(timestamps, 
                                            timestamps[(vector_length+1):length(timestamps)],
-                                           timestamps[(vector_length+1):length(timestamps)])), 
+                                           timestamps[(vector_length+1):length(timestamps)]), 
                          balance=c(actual, investment, peers),
                          type=c(rep("Current", times=((years+1)*vector_length)), 
                                 rep("Investment", times=(years*vector_length)),
                                 rep("Peers", times=(years*vector_length))))
   ####################
-  vector_length <- 365
-  years <- 1
-  actual <- 10000
-  investment <- get_investment(principle = actual,
-                               years = years,
-                               vector_length = vector_length)
-  temp <- investment
-  for(i in 1:length(investment)) {
-    investment[i] <- investment + sample(c(0, (rnorm(1) * 50)),
-                                         1,
-                                         runif(1,0.7,0.9))
-  }
-  
-  monthly <- 300
-  in_year <- 12 * monthly
-  goal <- get_investment2(principle = actual,
-                                years = years,
-                                monthly = monthly,
-                                vector_length = vector_length)
- 
-  timestamps <- seq( as.Date("2016-07-01"), by=1, len=(years*vector_length))
-  peers <- temp * 0.8
-  plan_data <- data.table(date = rep(timestamps, 3), 
+  number_of_days = 100
+  investment <- temp_investment_1[1:number_of_days]
+  peers <- temp_investment_1[1:number_of_days] + seq(0, -1000, length.out = number_of_days)
+
+  goal <- temp_investment_2[1:number_of_days]
+  plan_data <- data.table(date = rep(timestamps[1:number_of_days], 3),
                          balance=c(investment, goal, peers),
-                         type=c(rep("Current", times=((years)*vector_length)), 
-                                rep("Investment", times=(years*vector_length)),
-                                rep("Peers", times=(years*vector_length))))
+                         type=c(rep("Current", times=number_of_days), 
+                                rep("Investment", times=number_of_days),
+                                rep("Peers", times=number_of_days)))
   ### plotting
   # Suggestion Plot: Alternative 1
   output$alt1_line_graph <- renderPlot({
