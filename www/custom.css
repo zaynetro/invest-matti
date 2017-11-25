@@ -1,7 +1,7 @@
 .matti-logo {
   width: 100%;
   height: 150px;
-  background-image: url("/matti.png");
+  background-image: url("matti.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
