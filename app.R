@@ -33,14 +33,24 @@ body <- dashboardBody(
   tabItems(
     tabItem(tabName = "suggestions",
         h2("Suggestions"),
+        fluidRow(column(width = 12,
+          checkboxGroupInput("Indicators", "",
+                             c("Current",
+                               "Investment",
+                               "Peers"),
+                             selected=c(
+                               "Current",
+                               "Investment"),
+                             inline=TRUE)
+        )),
         h3("Alternative 1"),
-        fluidRow(
+        fluidRow(column(width = 12,
           plotOutput("alt1_line_graph", height = 350)
-        ),
+        )),
         h3("Alternative 2"),
-        fluidRow(
+        fluidRow(column(width = 12,
           plotOutput("alt2_line_graph", height = 350)
-        )
+        ))
     ),
     
     tabItem(tabName = "plan",
@@ -92,10 +102,14 @@ server <- function(input, output) {
                                vector_length = vector_length)
   print(length(investment))
   timestamps <- seq( as.Date("2016-07-01"), by=1, len=((years+1)*vector_length))
-  finances <- data.table(date = rep(x = c(timestamps, timestamps[(vector_length+1):length(timestamps)])), 
-                         balance=c(actual, investment),
+  peers <- actual[(vector_length+1):length(actual)] + seq(0, 1000, length.out = years*vector_length)
+  finances <- data.table(date = rep(x = c(timestamps, 
+                                          timestamps[(vector_length+1):length(timestamps)],
+                                          timestamps[(vector_length+1):length(timestamps)])), 
+                         balance=c(actual, investment, peers),
                          type=c(rep("Current", times=((years+1)*vector_length)), 
-                                rep("Investment", times=(years*vector_length))))
+                                rep("Investment", times=(years*vector_length)),
+                                rep("Peers", times=(years*vector_length))))
   ########################
   
   actual <- c(4000)
@@ -118,15 +132,20 @@ server <- function(input, output) {
                                vector_length = vector_length)
   print("investment length")
   print(length(investment))
-  
-  finances2 <- data.table(date = rep(x = c(timestamps, timestamps[(vector_length+1):length(timestamps)])), 
-                         balance=c(actual, investment),
+  peers <- actual[(vector_length+1):length(actual)] + seq(0, -20000, length.out = years*vector_length)
+  finances2 <- data.table(date = rep(x = c(timestamps, 
+                                           timestamps[(vector_length+1):length(timestamps)],
+                                           timestamps[(vector_length+1):length(timestamps)])), 
+                         balance=c(actual, investment, peers),
                          type=c(rep("Current", times=((years+1)*vector_length)), 
-                                rep("Investment", times=(years*vector_length))))
+                                rep("Investment", times=(years*vector_length)),
+                                rep("Peers", times=(years*vector_length))))
   print(finances2)
+  
+  # plotting
   output$alt1_line_graph <- renderPlot({
     print(
-      ggplot(data = finances, aes(x=date, y=balance, color=type, linetype=type)) + 
+      ggplot(data = finances[finances$type %in% input$Indicators], aes(x=date, y=balance, color=type, linetype=type)) + 
         geom_line() +
         labs(x="Date", y="Total")
     )
@@ -134,7 +153,7 @@ server <- function(input, output) {
   
   output$alt2_line_graph <- renderPlot({
     print(
-      ggplot(data = finances2, aes(x=date, y=balance, color=type, linetype=type)) + 
+      ggplot(data = finances2[finances2$type %in% input$Indicators], aes(x=date, y=balance, color=type, linetype=type)) + 
         geom_line() +
         labs(x="Date", y="Total")
     )
