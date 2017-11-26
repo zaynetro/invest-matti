@@ -70,6 +70,7 @@ body <- dashboardBody(
     
     tabItem(tabName = "plan",
         h2("Plan"),
+        tags$p("Here Matti tracks your progress so far and compares with your peers."),
         fluidRow(column(width = 12,
                         plotOutput("plan_line_graph", height = 350)       
         ))
